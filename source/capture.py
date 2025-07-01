@@ -55,25 +55,21 @@ FLAG_BITS = (
     (4, 'not_dot_flag', 0x10),
 )
 SKILL_ID = {
-    "01c48e3301c48e33": "ExpertArcher_MultiShot",
-    "ac5c5e385b71f140": "ExpertArcher_Richochet_ArrowRevolver",
-    "91d3cb655b71f140": "ExpertArcher_Richochet_SideStepRight",
-    "8bffef6c5b71f140": "ExpertArcher_Richochet_HawkShot",
-    "30efb51b5b71f140": "ExpertArcher_Richochet_EscapeStep",
-    "95ff1a3c1aa2aa6e": "ExpertArcher_ArrowRevolver",
-    "9265fb67f684db71": "ExpertArcher_ArrowRevolver_Tier2A_Bonus",
-    "ad9a337900000000": "ExpertArcher_MagnumShotEnd",
-    "45ed7f1e6491d56e": "ExpertArcher_SideStepRight",
-    "18aa950ad5512d3e": "ExpertArcher_HawkShot",
-    "9e5b953dd5512d3e": "ExpertArcher_HawkShot_Unguarded",
-    "fe6d8f7eb59e1f03": "ExpertArcher_EscapeStep",
-    "e714dd6ac04b4534": "ExpertArcher_FireArrow",
-    "61e5a00b96206807": "ExpertArcher_FireArrow_AddDMG",
-    "95ff1a3c0466f855": "ExpertArcher_ArrowRevolver",
-    "45ed7f1e0466f855": "ExpertArcher_SideStepRight",
-    "18aa950a0466f855": "ExpertArcher_HawkShot",
-    "fe6d8f7e0466f855": "ExpertArcher_EscapeStep",
-    "d48e317df1b1e555": "Ranged_Default_Attack"
+    "01c48e33": "ExpertArcher_MultiShot",
+    "ac5c5e38": "ExpertArcher_Richochet_ArrowRevolver",
+    "91d3cb65": "ExpertArcher_Richochet_SideStepRight",
+    "8bffef6c": "ExpertArcher_Richochet_HawkShot",
+    "30efb51b": "ExpertArcher_Richochet_EscapeStep",
+    "95ff1a3c": "ExpertArcher_ArrowRevolver",
+    "9265fb67": "ExpertArcher_ArrowRevolver_Tier2A_Bonus",
+    "ad9a3379": "ExpertArcher_MagnumShotEnd",
+    "45ed7f1e": "ExpertArcher_SideStepRight",
+    "18aa950a": "ExpertArcher_HawkShot",
+    "9e5b953d": "ExpertArcher_HawkShot_Unguarded",
+    "fe6d8f7e": "ExpertArcher_EscapeStep",
+    "e714dd6a": "ExpertArcher_FireArrow",
+    "61e5a00b": "ExpertArcher_FireArrow_AddDMG",
+    "d48e317d": "Ranged_Default_Attack"
 }
 
 class DamageContent(TypedDict):
@@ -143,7 +139,7 @@ def parse_skill(data):
         "timestamp": round(time.time() * 1000),
         "used_by": user_id,
         "target": target_id,
-        "skill_name": parse_skill_name(action_id+f, flags, e),
+        "skill_name": parse_skill_name(action_id, flags, e),
         "skill_id": action_id,
         "damage": None,
         "flags": flags,
@@ -321,7 +317,8 @@ class PacketStreamer:
                 
                 if data_type == 10701:
                     content = parse_damage(content)
-                    stack.append(content)
+                    if content['damage'] < 10000000 and content['damage'] > 0:
+                        stack.append(content)
 
                 elif data_type == 10299:
                     content = parse_skill(content)

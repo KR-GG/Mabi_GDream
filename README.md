@@ -62,10 +62,10 @@
 ⚠️ 일부 백신이 이 실행 파일을 잘못된 악성코드로 인식할 수 있습니다.  
 이는 패킷 분석 및 네트워크 관련 기능, 그리고 압축된 구조 때문입니다.
 
-- [🔗 VirusTotal 결과 보기](https://www.virustotal.com/gui/file/7fd66e12e02e5943ec60b14bb02bfd485ef5e5c26e478b5f4c477c41b2db348e?nocache=1)
+- [🔗 VirusTotal 결과 보기](https://www.virustotal.com/gui/file/96e00a75d4a614f9c5594698b2f465891253b263aab1010f9f041fbe6e3e6a5a?nocache=1)
 - 본 프로젝트는 Python 기반 오픈소스입니다. 누구나 소스를 확인하고 실행파일을 직접 빌드할 수 있습니다.
 - 실행 파일은 아래 명령어로 재현할 수 있습니다:
-> nuitka --standalone --onefile --msvc=latest --include-package=websockets --noinclude-pytest-mode=nofollow --nofollow-imports --remove-output capture.py
+> nuitka --standalone --onefile --msvc=latest --include-package=websockets --noinclude-pytest-mode=nofollow --remove-output capture.py
 - 의심된다면 직접 소스를 확인하거나 Python에서 실행해보실 수 있습니다.
 
 🛡 사용 중 백신에 의해 삭제될 경우, 예외 등록 후 사용해주세요.
