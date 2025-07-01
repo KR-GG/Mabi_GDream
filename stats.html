@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>모바노기 전투 리포트</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #1c1c1c;
+      color: #ecf0f1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    #ranking {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100%; /* 👈 꼭 필요 */
+    }
+    #ranking .toolbar {
+      background: #2c3e50;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    #ranking.toolbar button {
+      padding: 6px 12px;
+      font-weight: bold;
+      background: transparent;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #ranking .toolbar input[type="text"] {
+      padding: 6px;
+      border-radius: 4px;
+      border: none;
+    }
+    #ranking .toolbar label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    #ranking .status {
+      margin-left: auto;
+      font-weight: bold;
+    }
+    #ranking .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #ranking .panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #ranking .summary-section, .log-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #ranking .summary-section h2, .log-section h2, .totals-section h2 {
+      margin: 16px 20px 8px;
+      color: #3498db;
+    }
+    #ranking .log-section .scroll-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 20px;
+    }
+    #ranking table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9em;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #34495e;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tr:nth-child(even) {
+      background-color: #2c2c2c;
+    }
+    #damageMeter {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #1a1a1a;
+      color: #ffffff;
+      margin: 0;
+      padding: 20px;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+    }
+    #damageMeter .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    #damageMeter .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px;
+      background: linear-gradient(135deg, #2c3e50, #34495e);
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    #damageMeter .header h1 {
+        margin: 0;
+        font-size: 2.5em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    #damageMeter .battle-info {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 15px;
+        font-size: 1.1em;
+    }
+
+    #damageMeter .player-rankings {
+        background-color: #2c2c2c;
+        border-radius: 10px;
+        padding: 20px 30px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    #damageMeter .ranking-header {
+        display: grid;
+        grid-template-columns: 60px 1fr 240px; /* Damage column width adjusted */
+        gap: 15px;
+        padding: 15px 20px;
+        background-color: #34495e;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        font-weight: bold;
+        font-size: 0.9em;
+        color: #ecf0f1;
+    }
+
+    #damageMeter .ranking-header > div:last-child {
+        text-align: right;
+    }
+
+    #damageMeter .player-bar {
+        margin-bottom: 12px;
+        position: relative;
+        background-color: #4a4a4a;
+        border-radius: 8px;
+        overflow: visible;
+        height: 50px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    #damageMeter .player-bar-content {
+        display: grid;
+        grid-template-columns: 60px 1fr 240px; /* Damage column width adjusted */
+        gap: 15px;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        padding: 0 7px;
+    }
+
+    #damageMeter .player-bar:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    #damageMeter .rank-section {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 10px;
+    }
+
+    #damageMeter .rank-number {
+        background-color: #34495e;
+        color: #ecf0f1;
+        border-radius: 50%;
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1em;
+        font-weight: bold;
+    }
+
+    #damageMeter .rank-1 { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #2c3e50; }
+    #damageMeter .rank-2 { background: linear-gradient(135deg, #95a5a6, #bdc3c7); color: #2c3e50; }
+    #damageMeter .rank-3 { background: linear-gradient(135deg, #e67e22, #d35400); color: white; }
+
+    /* --- NEW: Stacked Bar Styles --- */
+    #damageMeter .player-bar-fill-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        display: flex; /* Use flexbox for stacking */
+        transition: width 0.5s ease;
+        border-radius: 8px;
+        z-index: 1;
+        overflow: hidden; /* Hide overflow from child elements */
+    }
+
+    #damageMeter .damage-segment {
+        height: 100%;
+        transition: width 0.5s ease;
+    }
+
+    #damageMeter .other-targets-damage {
+        /* Make "other" damage slightly transparent or darker */
+        filter: brightness(0.7);
+    }
+    /* --- End of New Styles --- */
+
+    #damageMeter .player-name {
+        font-weight: bold;
+        font-size: 1em;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        color: #ffffff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding-left: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    #damageMeter .stat-value {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        font-weight: bold;
+        font-size: 0.95em;
+        text-align: right;
+        padding: 0 5px;
+        gap: 4px; /* Space between damage numbers and DPS */
+    }
+
+    #damageMeter .damage-value .plus-sign {
+        color: #bdc3c7;
+        font-weight: normal;
+    }
+
+    #damageMeter .damage-value .total-dps {
+        color: #f39c12; /* Highlight DPS */
+        font-weight: normal;
+        margin-left: 5px;
+    }
+
+    #damageMeter .connection-status {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 10px 15px;
+        border-radius: 5px;
+        font-weight: bold;
+        z-index: 1000;
+    }
+
+    #damageMeter .connected {
+        background-color: #27ae60;
+        color: white;
+    }
+
+    #damageMeter .disconnected {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    #damageMeter .no-data {
+        text-align: center;
+        color: #7f8c8d;
+        font-size: 1.2em;
+        margin: 50px 0;
+    }
+    
+    /* -- Skill Breakdown (mostly unchanged) -- */
+    #damageMeter .skill-breakdown {
+        background-color: #3a3a3a;
+        border-radius: 8px;
+        margin-top: 10px;
+        padding: 15px;
+        border-left: 4px solid #3498db;
+        display: none;
+    }
+
+    #damageMeter .skill-breakdown.show {
+        display: block;
+    }
+
+    #damageMeter .skill-breakdown.show.animate {
+        animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+        from { opacity: 0; max-height: 0; padding-top: 0; padding-bottom: 0; }
+        to { opacity: 1; max-height: 500px; padding-top: 15px; padding-bottom: 15px; }
+    }
+
+    #damageMeter .skill-breakdown-header {
+        font-size: 1.1em;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #3498db;
+    }
+
+    #damageMeter .skill-item {
+        margin-bottom: 8px;
+        position: relative;
+        background-color: #4a4a4a;
+        border-radius: 4px;
+        overflow: visible;
+        height: 30px;
+        display: flex;
+        align-items: center;
+    }
+
+    #damageMeter .skill-item-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #e74c3c, #c0392b);
+        transition: width 0.3s ease;
+        border-radius: 4px;
+        position: relative;
+    }
+
+    #damageMeter .skill-item-info {
+        position: absolute;
+        left: 10px; top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.85em; font-weight: bold;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        z-index: 2; color: #ffffff;
+    }
+
+    #damageMeter .skill-item-stats {
+        position: absolute;
+        right: 10px; top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.85em; font-weight: bold;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        color: #ffffff; z-index: 3;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 2px 6px;
+        border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 탭 메뉴 -->
+  <div id="tab-menu" style="margin-bottom: 10px;">
+      <button onclick="showTab('ranking')" id="tab-ranking" class="tab-button active">개인 리포트</button>
+      <button onclick="showTab('damageMeter')" id="tab-meter" class="tab-button">딜미터기</button>
+  </div>
+
+  <div id="ranking" class="tab-content"  style="display:none;">
+    <div class="toolbar">
+      <h1 style="text-align: center; margin: 20px 0; color: #e67e22;">모바노기 전투 리포트</h1>
+      <button onclick="resetData()">기록 초기화</button>
+      <button onclick="exportCSV()">CSV로 저장</button>
+      <label><input type="checkbox" id="filter-dot" checked /> DOT 제외</label>
+      <label>스킬명: <input type="text" id="skill-filter" placeholder="스킬 이름 필터" /></label>
+      <label>타겟: <input type="text" id="target-filter" placeholder="타겟 필터" list="target-suggestions" />
+        <button onclick="document.getElementById('target-filter').value=''; updateTables();">❌</button>
+      </label>
+      <label>사용자: <input type="text" id="user-filter" placeholder="사용자 필터" list="user-suggestions" />
+        <button onclick="document.getElementById('user-filter').value=''; updateTables();">❌</button>
+      </label>
+      <label>직업: <span id="class-name"></span></label>
+      <datalist id="target-suggestions"></datalist>
+      <datalist id="user-suggestions"></datalist>
+      <div class="status" id="ws-status">🔴 연결 안됨</div>
+    </div>
+    <div class="main">
+      <div class="panel">
+        <div class="summary-section">
+          <h2>스킬 통계</h2>
+          <div class="scroll-container">
+            <table id="summary-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>스킬</th>
+                  <th>횟수</th>
+                  <th>총합</th>
+                  <th>평균</th>
+                  <th>최소</th>
+                  <th>최대</th>
+                  <th>치명타%</th>
+                  <th>점유율</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      <div class="totals-section">
+          <table>
+              <thead>
+              <tr>
+                  <th>총 데미지</th>
+                  <th>총 히트 수</th>
+                  <th>평균 데미지</th>
+                  <th>치명타 수</th>
+                  <th>치명타 확률</th>
+              </tr>
+              </thead>
+              <tbody id="totals-table">
+              <tr>
+                  <td id="total-damage">0</td>
+                  <td id="total-hits">0</td>
+                  <td id="avg-damage">0</td>
+                  <td id="total-crits">0</td>
+                  <td id="crit-rate">0%</td>
+              </tr>
+              </tbody>
+          </table>
+          </div>
+      </div>      
+      <div class="log-section">
+          <h2>데미지 로그</h2>
+          <div class="scroll-container">
+            <table id="log-table">
+              <thead>
+                <tr>
+                  <th>시간</th>
+                  <th>스킬</th>
+                  <th>대상</th>
+                  <th>데미지</th>
+                  <th>크리</th>
+                  <th>카운터</th>
+                  <th>무방비</th>
+                  <th>추가타</th>
+                  <th>연타</th>
+                  <th>강타</th>
+                  <th>상태이상</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <div id="damageMeter" class="tab-content">
+    <div class="container">
+      <div class="header">
+          <h1>👥 모비노기 미터기 - 플레이어 랭킹</h1>
+          <div class="battle-info">
+              <span>전투 시간: <span id="battle-time">0초</span></span>
+              <span>총 데미지: <span id="total-damage1">0</span></span>
+              <span>RDPS: <span id="raid-dps">0</span></span>
+              <span>참여 플레이어: <span id="player-count">0</span></span>
+          </div>
+      </div>
+
+      <div class="connection-status disconnected" id="connection-status">
+          연결 끊김
+      </div>
+
+      <div class="player-rankings" id="player-rankings">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const logTableBody = document.querySelector('#log-table tbody');
+    const summaryTableBody = document.querySelector('#summary-table tbody');
+    const targetDatalist = document.getElementById('target-suggestions');
+    const userDatalist = document.getElementById('user-suggestions');
+    const knownTargets = new Set();
+    const knownUsers = new Set();
+    const classMapping = {
+        'SwordMaster': { name: '검술', color: 'linear-gradient(90deg, #8B4513, #A0522D)' },
+        'Arbalist': { name: '석궁사수', color: 'linear-gradient(90deg, #228B22, #32CD32)' },
+        'FireMage': { name: '화법', color: 'linear-gradient(90deg, #FF4500, #FF6347)' },
+        'IceMage': { name: '얼탱', color: 'linear-gradient(90deg, #4169E1, #87CEEB)' },
+        'Fighter': { name: '격투가', color: 'linear-gradient(90deg, #DC143C, #B22222)' },
+        'LongBowMan': { name: '장궁병', color: 'linear-gradient(90deg, #2E8B57, #3CB371)' },
+        'Healer': { name: '힐러', color: 'linear-gradient(90deg, #FFD700, #FFA500)' },
+        'ExpertWarrior': { name: '전사', color: 'linear-gradient(90deg, #696969, #808080)' },
+        'GreatSwordWarrior': { name: '대검전사', color: 'linear-gradient(90deg, #4B0082, #6A5ACD)' },
+        'HighThief': { name: '도적', color: 'linear-gradient(90deg, #2F4F4F, #708090)' },
+        'DualBlades': { name: '듀블', color: 'linear-gradient(90deg, #8B008B, #DA70D6)' },
+        'HighArcher': { name: '궁수', color: 'linear-gradient(90deg, #006400, #228B22)' },
+        'ExpertArcher': { name: '궁수', color: 'linear-gradient(90deg, #006400, #228B22)' },
+        'HighMage': { name: '마법사', color: 'linear-gradient(90deg, #4B0082, #9400D3)' },
+        'Priest': { name: '사제', color: 'linear-gradient(90deg, #F0F8FF, #E6E6FA)' },
+        'Bard': { name: '음유시인', color: 'linear-gradient(90deg, #FF69B4, #FFB6C1)' },
+        'Monk': { name: '수도사', color: 'linear-gradient(90deg, #CD853F, #D2691E)' },
+        'Dancer': { name: '댄서', color: 'linear-gradient(90deg, #FF1493, #FF69B4)' },
+        'BattleMusician': { name: '악사', color: 'linear-gradient(90deg, #9932CC, #BA55D3)' }
+    };
+
+    let battleData = {};
+    let battleData1 = {};
+    let startTime = 0;
+    let lastUpdateTime = 0;
+    let totalBattleDamage = 0;
+    let expandedPlayers = new Set(); 
+    let retryCount = 0;
+
+    function init() {
+        connectWebSocket();
+        document.getElementById('filter-dot').addEventListener('change', updateTables);
+        document.getElementById('skill-filter').addEventListener('input', updateTables);
+        document.getElementById('target-filter').addEventListener('input', updateTables);
+        document.getElementById('user-filter').addEventListener('input', updateTables);
+    }
+
+    function connectWebSocket() {
+        try {
+            const ws = new WebSocket('ws://localhost:8000');
+        
+            ws.onopen = function(event) {
+                console.log('WebSocket 연결 성공');
+                console.log('Open event: ', event);
+                updateConnectionStatus('open');
+                retryCount = 0;
+            };
+            ws.onclose = function(event) {
+                console.log('WebSocket 연결 종료');
+                console.log('Close event: ', event);
+                updateConnectionStatus('close');
+                if (retryCount < 5) {
+                    retryCount++;
+                    console.log(`재시도 ${retryCount}회`);
+                } else {
+                    console.error('WebSocket 재연결 시도 횟수 초과');
+                }
+                setTimeout(connectWebSocket, 3000);
+            };
+            ws.onerror = function(event) {
+                console.error('WebSocket 오류 발생');
+                console.error('Error: ', event);
+                updateConnectionStatus('error');
+                if (retryCount < 5) {
+                    retryCount++;
+                    console.log(`재시도 ${retryCount}회`);
+                } else {
+                    console.error('WebSocket 재연결 시도 횟수 초과');
+                }
+                setTimeout(connectWebSocket, 3000);
+            };
+            ws.onmessage = async (e) => {
+                // e.data가 Blob이라 가정하고 ArrayBuffer로 변환
+                const buffer = await e.data.arrayBuffer();
+                const view = new DataView(buffer);
+                let offset = 0;
+
+                while (offset + 2 <= buffer.byteLength) {
+                    const length = view.getUint16(offset, true);  // 2바이트 길이 (little endian)
+                    offset += 2;
+
+                    if (offset + length > buffer.byteLength) {
+                        console.warn('불완전한 메시지 감지, 처리 중단');
+                        break;
+                    }
+
+                    const msgBytes = new Uint8Array(buffer, offset, length);
+                    offset += length;
+
+                    const packetBuffer = msgBytes.buffer.slice(msgBytes.byteOffset, msgBytes.byteOffset + length);
+                    const data = unpackDamagePacket(packetBuffer);
+                    processDamageData(data);
+                }
+
+                updateTables();
+                updateDisplay();
+            };
+        
+        } catch (error) {
+            updateConnectionStatus('error');
+            console.error('WebSocket 연결 실패:', error);
+            if (retryCount < 5) {
+                retryCount++;
+                console.log(`재시도 ${retryCount}회`);
+            } else {
+                console.error('WebSocket 재연결 시도 횟수 초과');
+            }
+            setTimeout(connectWebSocket, 3000);
+        }
+    }
+    
+    function updateConnectionStatus(connected) {
+        const wsStatus = document.getElementById('ws-status');
+        const statusElement = document.getElementById('connection-status');
+        if (connected == 'open') {
+            wsStatus.textContent = '🟢 연결됨';
+            statusElement.textContent = '🟢 연결됨';
+            statusElement.className = 'connection-status connected';
+        } else if (connected == 'close') {
+            wsStatus.textContent = '🔴 연결 종료';
+            statusElement.textContent = '🔴 연결 종료';
+            statusElement.className = 'connection-status disconnected';
+        } else if (connected == 'error') {
+            wsStatus.textContent = '🔴 오류';
+            statusElement.textContent = '🔴 오류';
+            statusElement.className = 'connection-status disconnected';
+        } else {
+            wsStatus.textContent = '🔴 연결 안됨';
+            statusElement.textContent = '🔴 연결 안됨';
+            statusElement.className = 'connection-status disconnected';
+        }
+    }
+    
+    function updatePlayerClass(userData) {
+            if (!userData.skills) return;
+            let currentClassCode = null;
+            for (const skillName of Object.keys(userData.skills)) {
+                for (const [classCode, classInfo] of Object.entries(classMapping)) {
+                    if (skillName.includes(classCode)) {
+                        currentClassCode = classCode;
+                    }
+                }
+                if(currentClassCode) {
+                    break;
+                }
+            }
+            document.getElementById('class-name').textContent = currentClassCode ? classMapping[currentClassCode].name : 'Unknown';
+            return currentClassCode;
+        }
+
+    function resetData() {
+        knownTargets.clear();
+        knownUsers.clear();
+        targetDatalist.innerHTML = '';
+        userDatalist.innerHTML = '';
+        battleData = {};
+        logTableBody.innerHTML = '';
+        summaryTableBody.innerHTML = '';
+        document.getElementById('user-filter').value = '';
+        document.getElementById('skill-filter').value = '';
+        document.getElementById('class-name').textContent = '';
+        document.getElementById('total-damage').textContent = 0;
+        document.getElementById('total-hits').textContent = 0;
+        document.getElementById('avg-damage').textContent = 0;
+        document.getElementById('total-crits').textContent = 0;
+        document.getElementById('crit-rate').textContent = '0%';
+    }
+    
+    function exportCSV() {
+        const userFilter = document.getElementById('user-filter').value.toLowerCase();
+        let allLogs = [];
+        if(!userFilter) {
+            allLogs = Object.values(battleData).flatMap(user => user.damageLogs);
+        } else {
+            const userData = battleData[userFilter];
+            if (userData) {
+                allLogs = userData.damageLogs;
+            }
+        }
+        if (allLogs.length === 0) return;
+        const header = Object.keys(allLogs[0]).join(',');
+        const rows = allLogs.map(log => Object.values(log).join(','));
+        const csvContent = [header, ...rows].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'damage_logs.csv';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function unpackDamagePacket(buffer) {
+        const view = new DataView(buffer);
+        let offset = 0;
+
+        // 1. timestamp (4 bytes, little endian)
+        const low = view.getUint32(offset, true);
+        const high = view.getUint32(offset + 4, true);
+        const timestamp = BigInt(high) << 32n | BigInt(low);
+        offset += 8;
+
+        // 2. used_by (4 bytes)
+        const usedBy = [...new Uint8Array(buffer.slice(offset, offset + 4))]
+            .map(b => b.toString(16).padStart(2, '0')).join('');
+        offset += 4;
+
+        // 3. target (4 bytes)
+        const target = [...new Uint8Array(buffer.slice(offset, offset + 4))]
+            .map(b => b.toString(16).padStart(2, '0')).join('');
+        offset += 4;
+
+        // 4. damage (4 bytes)
+        const damage = view.getUint32(offset, true);
+        offset += 4;
+
+        // 5. flags1 (2 bytes)
+        const flags1 = view.getUint16(offset, true);
+        offset += 2;
+
+        // 플래그 디코딩
+        const critFlag      = (flags1 >> 0) & 1;
+        const addHitFlag    = (flags1 >> 1) & 1;
+        const unguardedFlag = (flags1 >> 2) & 1;
+        const breakFlag     = (flags1 >> 3) & 1;
+        const powerFlag     = (flags1 >> 4) & 1;
+        const fastFlag      = (flags1 >> 5) & 1;
+        const dotFlag       = (flags1 >> 6) & 0b111;  // bits 6-8
+
+        // 6. skill_name length (1 byte)
+        const nameLen = view.getUint8(offset);
+        offset += 1;
+
+        // 7. skill_name (nameLen bytes, UTF-8)
+        const skillBytes = new Uint8Array(buffer.slice(offset, offset + nameLen));
+        skillName_ = new TextDecoder('utf-8').decode(skillBytes);
+        const skillName = skillName_
+
+        offset += nameLen;
+
+        return {
+            timestamp,
+            used_by: usedBy,
+            target: target,
+            damage,
+            crit_flag: critFlag,
+            add_hit_flag: addHitFlag,
+            unguarded_flag: unguardedFlag,
+            break_flag: breakFlag,
+            power_flag: powerFlag,
+            fast_flag: fastFlag,
+            dot_flag: dotFlag,
+            skill_name: skillName
+        };
+    }
+
+    function processDamageData(log) {
+        console.log("처리된 로그:", log);
+
+        const timestamp = parseInt(log.timestamp);
+        const usedBy = log.used_by.toLowerCase();
+        const target = log.target.toLowerCase();
+        const skill = log.skill_name;
+        const damage = parseInt(log.damage);
+        const critFlag = parseInt(log.crit_flag);
+        const addHitFlag = parseInt(log.add_hit_flag);
+
+        if (lastUpdateTime === 0 || timestamp - lastUpdateTime > 10000) {
+            startNewBattle(timestamp);
+        }
+
+        lastUpdateTime = timestamp;
+
+        if (!battleData[usedBy]) {
+            battleData[usedBy] = {
+                totalDamage: 0,
+                totalHits: 0,
+                totalCrits: 0,
+                damageLogs: [],
+                damageByTarget: {},
+                skills: {} 
+            };
+        }
+
+        updateTargetSuggestions(target);
+
+        if (!battleData[usedBy].damageByTarget[target]) {
+            battleData[usedBy].damageByTarget[target] = 0;
+        }
+
+        if (!battleData[usedBy].skills[log.skill_name]) {
+            battleData[usedBy].skills[log.skill_name] = {
+                damage: 0,
+                hits: 0,
+                crits: 0,
+                addHits: 0
+            };
+        }
+
+        battleData[usedBy].totalDamage += damage;
+        battleData[usedBy].damageByTarget[target] += damage;
+        battleData[usedBy].skills[skill].damage += damage;
+        battleData[usedBy].damageLogs ??= [];
+        battleData[usedBy].damageLogs.push(log);
+        
+        if (!addHitFlag) {
+            battleData[usedBy].hitCount += 1;
+            battleData[usedBy].skills[skill].hits += 1;
+        }
+
+        if (critFlag) {
+            battleData[usedBy].critCount += 1;
+            battleData[usedBy].skills[skill].crits += 1;
+        }
+
+        if (addHitFlag) {
+            battleData[usedBy].addHitCount += 1;
+            battleData[usedBy].skills[skill].addHits += 1;
+        }
+
+        totalBattleDamage += damage;
+
+        updateUserSuggestions(usedBy);
+    }
+
+    function updateTargetSuggestions(target) {
+      if (!knownTargets.has(target)) {
+        knownTargets.add(target);
+        const option = document.createElement('option');
+        option.value = target;
+        targetDatalist.appendChild(option);
+      }
+    }
+
+    function updateUserSuggestions(user) {
+        if (!knownUsers.has(user)) {
+            knownUsers.add(user);
+          
+            // 해당 사용자의 직업 정보 가져오기
+            const userData = battleData[user];
+            let className = '';
+            if (userData){
+                className = classMapping[updatePlayerClass(userData)] ? classMapping[updatePlayerClass(userData)].name : '';
+            }
+            const option = document.createElement('option');
+            option.value = user;
+            option.textContent = className ? `${user}(${className})` : user;
+            userDatalist.appendChild(option);
+        } else{
+            // 이미 존재하는 경우, 직업 정보가 ''이면 새로운 직업 정보 추가
+            const existingOption = Array.from(userDatalist.options).find(opt => opt.textContent === user);
+            if (existingOption) {
+                const userData = battleData[user];
+                let className = '';
+                if (userData){
+                    className = classMapping[updatePlayerClass(userData)] ? classMapping[updatePlayerClass(userData)].name : '';
+                }
+                existingOption.textContent = className ? `${user}(${className})` : user;
+            }
+        }
+    }
+
+    function startNewBattle(timestamp) {
+        console.log("새로운 전투 시작");
+        battleData = {};
+        startTime = timestamp;
+        totalBattleDamage = 0;
+        expandedPlayers.clear();
+        knownTargets.clear();
+        knownUsers.clear();
+        updateDisplay();
+    }
+
+    function updateTables() {
+        const filterDot = document.getElementById('filter-dot').checked;
+        const skillFilter = document.getElementById('skill-filter').value.toLowerCase();
+        const targetFilter = document.getElementById('target-filter').value.toLowerCase();
+        let userFilter = document.getElementById('user-filter').value.toLowerCase();
+        let userData = {};
+        let damageLogs = []
+        if (!userFilter) {
+            userData = { total: 0, hits: 0, crits: 0, addHits: 0, skills: {} };
+            damageLogs = Object.values(battleData).flatMap(user => user.damageLogs);
+            userFilter = '';
+        } else {
+            userData = Object.assign({}, battleData[userFilter]);
+            if (!userData) {
+                logTableBody.innerHTML = '<tr><td colspan="11">해당 사용자의 로그가 없습니다.</td></tr>';
+                summaryTableBody.innerHTML = '';
+                return;
+            }
+            damageLogs = userData.damageLogs;
+        }
+
+        const filteredLogs = damageLogs.filter(log => {
+            if (filterDot && log.dot_flag != 0) return false;
+            if (skillFilter && !log.skill_name.toLowerCase().includes(skillFilter)) return false;
+            if (targetFilter && !log.target.toLowerCase().includes(targetFilter)) return false;
+            if (userFilter && !log.used_by.toLowerCase().includes(userFilter)) return false;
+            return true;
+        });
+        userData.total = 0;
+        userData.hits = 0;
+        userData.crits = 0;
+        userData.addHits = 0;
+        userData.skills = {};
+        filteredLogs.forEach(log => {
+            const dmg = parseInt(log.damage);
+            const name = log.skill_name;
+            const isCrit = log.crit_flag === 1;
+            const isAddHit = log.add_hit_flag === 1;
+
+            if (!userData.skills[name]) {
+                userData.skills[name] = { count: 0, total: 0, min: dmg, max: dmg, hits: 0, addHits:0, crits: 0 };
+            }
+            const stat = userData.skills[name];
+
+            stat.min = Math.min(stat.min, dmg);
+            stat.max = Math.max(stat.max, dmg);
+
+            userData.total += dmg;
+            stat.total += dmg;
+            stat.count += 1;
+
+            if(!isAddHit) {
+                userData.hits += 1;
+                stat.hits += 1;
+            }
+            if (isCrit) {
+                userData.crits += 1;
+                stat.crits += 1;
+            }
+            if (isAddHit) {
+                userData.addHits += 1;
+                stat.addHits += 1;
+            }
+        });
+        updateTotals(userData);
+        updatePlayerClass(userData);
+        summaryTableBody.innerHTML = Object.entries(userData.skills)
+            .sort(([, a], [, b]) => b.total - a.total)
+            .map(([name, stat], idx) => {
+            const avg = stat.total / stat.count;
+            const pct = (stat.total / userData.total) * 100;
+            const critRate = (stat.crits / stat.count * 100).toFixed(1);
+            return `
+                <tr>
+                <td>${idx + 1}</td>
+                <td>${name}</td>
+                <td>${stat.count}</td>
+                <td>${stat.total.toLocaleString()}</td>
+                <td>${avg.toFixed(0)}</td>
+                <td>${stat.min}</td>
+                <td>${stat.max}</td>
+                <td>${critRate}%</td>
+                <td>${pct.toFixed(1)}%</td>
+                </tr>`;
+            }).join('');
+
+        logTableBody.innerHTML = filteredLogs.map(log => {
+            const now = new Date(parseInt(log.timestamp)).toLocaleTimeString('ko-KR');
+            return `
+            <tr>
+                <td>${now}</td>
+                <td>${log.skill_name}</td>
+                <td>${log.target}</td>
+                <td>${Number(log.damage).toLocaleString()}</td>
+                <td>${log.crit_flag === 1 ? '✅' : ''}</td>
+                <td>${log.unguarded_flag === 1 ? '✅' : ''}</td>
+                <td>${log.break_flag === 1 ? '✅' : ''}</td>
+                <td>${log.add_hit_flag === 1 ? '✅' : ''}</td>
+                <td>${log.fast_flag === 1 ? '✅' : ''}</td>
+                <td>${log.power_flag === 1 ? '✅' : ''}</td>
+                <td>
+                ${{
+                    1: '❄️',    // ice
+                    2: '🔥',    // fire
+                    3: '⚡',    // electric
+                    4: '✝️',    // holy
+                    5: '🩸',    // bleed
+                    6: '🖤',    // dark
+                    7: '☠️',    // poison
+                    8: '🧠'     // mind
+                }[log.dot_flag] ?? ''}
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    function updateTotals(userData) {
+        document.getElementById('total-damage').textContent = userData.total.toLocaleString();
+        document.getElementById('total-hits').textContent = userData.hits;
+        document.getElementById('avg-damage').textContent = userData.hits > 0 ? Math.round(userData.total / userData.hits).toLocaleString() : 0;
+        document.getElementById('total-crits').textContent = userData.crits;
+        document.getElementById('crit-rate').textContent = userData.hits > 0 ? ((userData.crits / userData.hits) * 100).toFixed(1) + '%' : '0%';
+    }
+
+    function updateDisplay() {
+        updateBattleInfo();
+        updatePlayerRankings();
+    }
+
+    function updateBattleInfo() {
+        const battleTime = lastUpdateTime > 0 ? Math.floor((lastUpdateTime - startTime) / 1000) : 0;
+        const playerCount = Object.values(battleData).filter(ud => updatePlayerClass(ud)).length;
+
+        let raidDps = 0;
+        if (battleTime > 0) {
+            raidDps = Math.floor(totalBattleDamage / battleTime);
+        }
+        document.getElementById('battle-time').textContent = `${battleTime}초`;
+        document.getElementById('total-damage1').textContent = totalBattleDamage.toLocaleString();
+        document.getElementById('raid-dps').textContent = raidDps.toLocaleString();
+        document.getElementById('player-count').textContent = playerCount;
+        
+    }
+
+    function updatePlayerRankings() {
+        const container = document.getElementById('player-rankings');
+
+        if (Object.keys(battleData).length === 0) {
+            container.innerHTML = `<div class="ranking-header"><div>순위</div><div>플레이어</div><div>데미지 (단일 DPS)</div></div><div class="no-data">데미지 데이터를 기다리는 중...</div>`;
+            return;
+        }
+
+        const sortedPlayers = Object.entries(battleData).sort(([,a], [,b]) => b.totalDamage - a.totalDamage);
+
+        const maxDamage = sortedPlayers.length > 0 ? sortedPlayers[0][1].totalDamage : 1;
+        const battleTime = lastUpdateTime > 0 ? Math.max(1, (lastUpdateTime - startTime) / 1000) : 1;
+
+        let html = `<div class="ranking-header"><div>순위</div><div>플레이어</div><div>데미지 (단일 DPS)</div></div>`;
+
+        let displayedPlayerIndex = 0;
+        sortedPlayers.forEach(([userId, userData]) => {
+            const detectedClass = updatePlayerClass(userData);
+            if (!detectedClass || !classMapping[detectedClass]) {
+                return; 
+            }
+
+            // --- NEW: Calculate damage split ---
+            let mainTargetDamage = 0;
+            let otherTargetsDamage = 0;
+
+            const targetDamages = Object.values(userData.damageByTarget);
+            if (targetDamages.length > 0) {
+                mainTargetDamage = Math.max(...targetDamages);
+            }
+            otherTargetsDamage = userData.totalDamage - mainTargetDamage;
+            
+            const mainDamagePercentOfTotal = userData.totalDamage > 0 ? (mainTargetDamage / userData.totalDamage) * 100 : 0;
+            const otherDamagePercentOfTotal = 100 - mainDamagePercentOfTotal;
+            // --- End of new calculation ---
+
+            const playerDps = Math.floor(mainTargetDamage / battleTime);
+            const barWidth = (userData.totalDamage / maxDamage) * 100;
+            const barColor = classMapping[detectedClass].color;
+            const className = classMapping[detectedClass].name;
+            const rankClass = displayedPlayerIndex < 3 ? `rank-${displayedPlayerIndex + 1}` : '';
+            const displayName = `${className} ${userId.substring(0, 8)}`;
+
+            html += `
+                <div class="player-bar" onclick="toggleSkillBreakdown('${userId}')">
+                    <div class="player-bar-fill-wrapper" style="width: ${barWidth}%;">
+                        <div class="damage-segment main-target-damage" style="width: ${mainDamagePercentOfTotal}%; background: ${barColor};"></div>
+                        <div class="damage-segment other-targets-damage" style="width: ${otherDamagePercentOfTotal}%; background: ${barColor};"></div>
+                    </div>
+                    <div class="player-bar-content">
+                        <div class="rank-section">
+                            <div class="rank-number ${rankClass}">${displayedPlayerIndex + 1}</div>
+                        </div>
+                        <div class="player-name">
+                            ${displayName}
+                        </div>
+                        <div class="stat-value damage-value">
+                            ${mainTargetDamage.toLocaleString()}
+                            <span class="plus-sign">+</span>
+                            ${otherTargetsDamage.toLocaleString()}
+                            <span class="total-dps">(${playerDps.toLocaleString()})</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="skill-breakdown ${expandedPlayers.has(userId) ? 'show' : ''}" id="skills-${userId}">
+                    ${generateSkillBreakdown(userId, userData)}
+                </div>
+            `;
+            
+            displayedPlayerIndex++;
+        });
+        
+        if (displayedPlayerIndex === 0) {
+            html += `<div class="no-data">감지된 플레이어 데이터가 없습니다.</div>`;
+        }
+
+        container.innerHTML = html;
+    }
+
+    function generateSkillBreakdown(userId, userData) {
+        // This breakdown currently shows total skill damage across all targets.
+        // A more advanced version might track skills per target.
+        if (!userData.skills || Object.keys(userData.skills).length === 0) {
+            return '<div style="color: #7f8c8d; text-align: center; padding: 20px;">스킬 데이터가 없습니다.</div>';
+        }
+
+        const sortedSkills = Object.entries(userData.skills).sort(([,a], [,b]) => b.damage - a.damage);
+        const maxSkillDamage = sortedSkills.length > 0 ? sortedSkills[0][1].damage : 1;
+
+        let skillHtml = `<div class="skill-breakdown-header">유저 ${userId.substring(0, 8)} - 스킬 상세 (전체 타겟 합산)</div>`;
+        sortedSkills.forEach(([skillName, skillData]) => {
+            const skillPercentage = userData.totalDamage > 0 ? ((skillData.damage / userData.totalDamage) * 100).toFixed(1) : 0;
+            const skillTotalHits = skillData.hits + skillData.addHits;
+            const skillCritRate = skillTotalHits > 0 ? ((skillData.crits / skillTotalHits) * 100).toFixed(1) : 0;
+            const barWidth = (skillData.damage / maxSkillDamage) * 100;
+            
+            skillHtml += `
+                <div class="skill-item">
+                    <div class="skill-item-fill" style="width: ${barWidth}%">
+                        <div class="skill-item-info">${skillName}</div>
+                    </div>
+                    <div class="skill-item-stats">
+                        타수 ${skillData.hits} | 크리 ${skillCritRate}% | 추가타율 ${skillData.hits > 0 ? ((skillData.addHits / skillData.hits) * 100).toFixed(1) : 0}% | 
+                        ${(() => {
+                            if (skillData.damage != null && typeof skillData.damage === 'number') {
+                                return skillData.damage.toLocaleString();
+                            } else {
+                                console.warn('skillData.damage가 null 또는 정의되지 않음:', skillData.damage);
+                                return '0';
+                            }
+                        })()} (${skillPercentage}%)
+                    </div>
+                </div>
+            `;
+        });
+
+        return skillHtml;
+    }
+
+    function toggleSkillBreakdown(userId) {
+        const skillBreakdown = document.getElementById(`skills-${userId}`);
+        if (!skillBreakdown) return;
+
+        if (expandedPlayers.has(userId)) {
+            expandedPlayers.delete(userId);
+            skillBreakdown.classList.remove('show');
+        } else {
+            // Collapse others first for single-expansion mode
+            document.querySelectorAll('.skill-breakdown.show').forEach(el => el.classList.remove('show'));
+            expandedPlayers.clear();
+            
+            expandedPlayers.add(userId);
+            // Update content before showing to ensure it's fresh
+            const userData = battleData[userId];
+            if (userData) {
+                skillBreakdown.innerHTML = generateSkillBreakdown(userId, userData);
+            }
+            skillBreakdown.classList.add('show', 'animate');
+            setTimeout(() => skillBreakdown.classList.remove('animate'), 300);
+        }
+    }
+    
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(div => {
+        div.style.display = (div.id === tabId) ? 'block' : 'none';
+      });
+    }
+  
+    init();
+  </script>
+</body>
+</html>
