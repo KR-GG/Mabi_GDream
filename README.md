@@ -1,73 +1,77 @@
+# GDream 🌙
 
-# GDream
+**GDream** is a specialized real-time companion for the **Archer class only** in *Mobinogi*.  
+It quietly observes each shot fired, every moment of precision — and transforms them into a dreamlike performance on screen.
 
-**GDream**은 *마비노기 모바일*에서 궁수 직업의 전투 데이터를 실시간으로 분석하고 시각화하는 <strong>**딜미터기**(DPS Meter)</strong>입니다.  
-게임 패킷을 분석해 WebSocket으로 전송하고, 별도의 HTML 인터페이스에서 실시간으로 확인할 수 있습니다.
-
----
-
-## 🎯 주요 특징
-
-- **궁수 직업 전용** 실시간 전투 로그 분석
-- **WebSocket 기반 전송** + 브라우저 기반 시각화
-- **Brotli 압축 해제**, Skill/Damage 플래그 파싱
+> ⚠️ **This tool works exclusively for Archers.** Other classes are not supported for now.
 
 ---
 
-## 🚀 사용법
+## ✨ Features
 
-0. [Npcap](https://nmap.org/npcap/) 설치 [🔗 Npcap 설치 페이지](https://nmap.org/npcap/)
-> 설치할 때, **"Install Npcap in WinPcap API-compatible Mode"** 옵션을 꼭 체크해주세요.
-1. `capture.bat` 실행  
-2. 파일 목록에서 `stats.html` 더블 클릭(웹 브라우저가 열리지 않았을 경우)  
-3. 실시간 딜로그를 브라우저에서 확인
-
-> ⚠ 프로그램 실행 시 방화벽 접근 권한 요청이 뜰 수 있습니다. "허용"해 주세요.
+- 💘 **Exclusively built for Archers** — no other class is supported
+- Real-time performance reflection via browser
+- WebSocket-based live delivery
 
 ---
 
-### ❗ WebSocket 연결이 계속 반복되는 경우?
+## 🌌 How to Begin the Dream
 
-- `stats.html` 파일을 새로고침(F5)하거나
-- 브라우저 탭을 닫고 다시 열어주세요.
-- 그래도 문제가 계속된다면 `capture.exe`를 재실행해 보세요.
+0. Install [Npcap](https://nmap.org/npcap/)  
+   > Be sure to check: **"Install Npcap in WinPcap API-compatible Mode"**
+1. Run `capture.bat` to begin the dream session  
+2. Open `stats.html` in your browser  
+3. Watch your arrows find their mark — in real time
 
----
-
-## 📁 구성 파일
-
-| 파일명          | 설명                          |
-|----------------|------------------------------|
-| `capture.bat`  | 패킷 분석 및 WebSocket 서버 실행|
-| `stats.html`   | 클라이언트 뷰어 (웹 페이지)      |
+> 🛡️ Firewall prompts may appear; allow access when asked.
 
 ---
 
-## ⚙️ 요구사항
+### 🔄 Trouble staying connected?
 
-- Windows 10 이상
-- 가상 머신 환경에서 돌리길 권장
-
----
-
-## ⚠️ 제한 사항
-
-- 현재 **궁수 계열 직업만 지원**
-- 도트딜 & 어비스 룬 관련 정확히 동작하는지 확인 불가
+- Refresh the page (F5)
+- Close and reopen the browser tab
+- Restart `capture.bat` if needed
 
 ---
 
-## 📄 라이선스
+## 📁 File Overview
 
-본 프로젝트는 MIT 라이선스를 따릅니다.  
-개인적인 용도 외의 무단 배포/수정은 제한될 수 있습니다.
+| Filename         | Description                        |
+|------------------|------------------------------------|
+| `capture.bat`    | Launches the tracking session      |
+| `stats.html`     | Browser-based dream visualizer     |
 
 ---
 
-## 🙋‍♂️ 개발자 노트
+## ⚙️ Requirements
 
-- 프로젝트명: `GDream`  
-- 개발자: KR-GG  
-- 문의: GitHub Issues 또는 DM
+- Windows 10 or later  
+- Recommended: run in a virtual machine for stability
 
+---
 
+## 🚧 Limitations
+
+- 🏹 **Only supports with Expert-Archer-class characters**
+- Not precisely verified for DoT effects or Abyss Rune interactions
+- Using any other class will result in a Idle slate
+
+---
+
+## 📜 License
+
+Licensed under the **MIT License**.  
+Modification or redistribution for public use is discouraged without consent.
+
+---
+
+## 👤 Developer Notes
+
+- Project Name: `GDream`  
+- Developer: KR-GG  
+- Contact: GitHub Issues or DM
+
+---
+
+> “Some dreams are meant only for those who draw the bow. For others, the path remains silent.”
