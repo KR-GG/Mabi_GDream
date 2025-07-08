@@ -5,8 +5,23 @@ import websockets
 import threading
 from scapy.all import sniff, Raw, TCP
 from collections import deque
-from functools import lru_cache
 import time
+import logging
+
+# ---------- LOGGING SETUP ----------
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
+
+file_handler = logging.FileHandler("log.log", encoding="utf-8")
+file_handler.setLevel(logging.DEBUG)
+file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
+
+logger.addHandler(console_handler)
+logger.addHandler(file_handler)
 
 # ---------- CONFIGURATION ----------
 TARGET_PORT = 16000
@@ -38,21 +53,23 @@ FLAG_BITS = (
 )
 
 SKILL_ID = {
-    "01c48e33": "ExpertArcher_MultiShot",
-    "ac5c5e38": "ExpertArcher_Richochet_ArrowRevolver",
-    "91d3cb65": "ExpertArcher_Richochet_SideStepRight",
-    "8bffef6c": "ExpertArcher_Richochet_HawkShot",
-    "30efb51b": "ExpertArcher_Richochet_EscapeStep",
-    "95ff1a3c": "ExpertArcher_ArrowRevolver",
-    "9265fb67": "ExpertArcher_ArrowRevolver_Tier2A_Bonus",
-    "ad9a3379": "ExpertArcher_MagnumShotEnd",
-    "45ed7f1e": "ExpertArcher_SideStepRight",
-    "18aa950a": "ExpertArcher_HawkShot",
-    "9e5b953d": "ExpertArcher_HawkShot_Unguarded",
-    "fe6d8f7e": "ExpertArcher_EscapeStep",
-    "e714dd6a": "ExpertArcher_FireArrow",
-    "61e5a00b": "ExpertArcher_FireArrow_AddDMG",
-    "d48e317d": "Ranged_Default_Attack"
+    "01c48e33": "궁수_다발사격",
+    "ac5c5e38": "궁수_애로우리볼버_도탄",
+    "91d3cb65": "궁수_사이드스텝_도탄",
+    "8bffef6c": "궁수_호크샷_도탄",
+    "30efb51b": "궁수_이스케이프스텝_도탄",
+    "95ff1a3c": "궁수_애로우리볼버",
+    "9265fb67": "궁수_치명적인사격",
+    "ad9a3379": "궁수_매그넘샷",
+    "45ed7f1e": "궁수_사이드스텝",
+    "a8a27a27": "궁수_사이드스텝",
+    "18aa950a": "궁수_호크샷",
+    "9e5b953d": "궁수_호크샷_무방비",
+    "fe6d8f7e": "궁수_이스케이프스텝",
+    "e714dd6a": "궁수_죽음의궤적",
+    "61e5a00b": "궁수_죽음의궤적_추가대미지",
+    "d48e317d": "평타",
+    
 }
 
 connection_buffer = bytearray()
@@ -65,7 +82,6 @@ batched_payloads = deque()
 batch_lock = asyncio.Lock()
 batch_sender_task = None
 
-@lru_cache(maxsize=256)
 def extract_flags(flags: bytes) -> dict:
     result = {}
     for index, name, mask in FLAG_BITS:
@@ -120,10 +136,10 @@ def extract_packets(data: bytes):
                     try:
                         content = brotli.decompress(content)
                     except brotli.error as e:
-                        print(f"Brotli decompression error: {e}")
+                        logger.error(f"Brotli decompression error: {e}")
                         continue
 
-                if data_type in (10701, 10299):
+                if data_type in (10701, 10299, 100178):
                     result.append({
                         "type": data_type,
                         "timestamp": round(time.time() * 1000),
@@ -131,7 +147,7 @@ def extract_packets(data: bytes):
                     })
 
             except Exception as e:
-                print(f"[ERROR] Failed to parse inner payload: {e}")
+                logger.error(f"[ERROR] Failed to parse inner payload: {e}")
                 break
 
         pivot = section_end
@@ -210,23 +226,23 @@ async def send_batch_periodically(websocket):
                     struct.pack('<H', len(pkt)) + pkt for pkt in batch
                 )
                 await websocket.send(packed)
-                print(f"[INFO] Sent batch of {len(batch)} packets")
+                logger.info(f"Sent batch of {len(batch)} packets")
             except Exception as e:
-                print(f"[ERROR] Failed to send batch: {e}")
+                logger.error(f"Failed to send batch: {e}")
                 break
     except asyncio.CancelledError:
-        print("[INFO] Batch sender cancelled")
+        logger.info("Batch sender cancelled")
 
 async def handler(websocket):
     global batch_sender_task
-    print(f"[INFO] Client connected: {websocket.remote_address}")
+    logger.info(f"Client connected: {websocket.remote_address}")
     connected_clients.add(websocket)
     batch_sender_task = asyncio.create_task(send_batch_periodically(websocket))
     try:
         async for _ in websocket:
             pass
     except Exception as e:
-        print(f"[ERROR] WebSocket error: {e}")
+        logger.error(f"WebSocket error: {e}")
     finally:
         connected_clients.discard(websocket)
         if batch_sender_task:
@@ -235,7 +251,7 @@ async def handler(websocket):
                 await batch_sender_task
             except asyncio.CancelledError:
                 pass
-        print(f"[INFO] Client disconnected: {websocket.remote_address}")
+        logger.info(f"Client disconnected: {websocket.remote_address}")
 
 async def send_data():
     global current_damage, send_data_running
@@ -255,6 +271,15 @@ async def send_data():
                         'target': content[8:12].hex(),
                         'damage': damage
                     }
+                    logger.debug(f"Current damage set: {current_damage}")
+            elif t == 100178:
+                damage = int.from_bytes(content[8:12], 'little') - int.from_bytes(content[16:20], 'little')
+                if 0 < damage < 1e8:
+                    current_damage = {
+                        'target': content[0:4].hex(),
+                        'damage': damage
+                    }
+                    logger.debug(f"Current damage set: {current_damage}")
             elif t == 10299 and current_damage:
                 used_by = content[0:4].hex()
                 target = content[8:12].hex()
@@ -270,6 +295,8 @@ async def send_data():
                         'damage': current_damage['damage'],
                         'flags': flags
                     }
+                    logger.debug(f"Damage data prepared: {damage_data}")
+                    current_damage = None
                     payload = format_and_pack_log(damage_data)
                     await enqueue_payload(payload)
     finally:
@@ -288,13 +315,13 @@ def handle_packet(pkt):
             if consumed > 0:
                 connection_buffer = connection_buffer[consumed:]
     except Exception as e:
-        print(f"[ERROR] handle_packet failed: {e}")
+        logger.error(f"handle_packet failed: {e}")
 
 async def start_websocket_server():
     global main_loop
     main_loop = asyncio.get_running_loop()
     async with websockets.serve(handler, "127.0.0.1", 8000, max_size=None):
-        print("[INFO] WebSocket server running on ws://127.0.0.1:8000")
+        logger.info("WebSocket server running on ws://127.0.0.1:8000")
         await asyncio.Future()
 
 def main():
