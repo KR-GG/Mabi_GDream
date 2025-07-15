@@ -1,6 +1,9 @@
 @echo off
 setlocal EnableDelayedExpansion
 
+:: Fix working directory to the script's location
+cd /d "%~dp0"
+
 :: 1. Check for admin privileges
 net session >nul 2>&1
 if %errorlevel% neq 0 (
