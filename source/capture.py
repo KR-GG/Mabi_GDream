@@ -456,7 +456,7 @@ async def start_websocket_server():
     ip = get_local_ip()
     port = 8000
 
-    async with websockets.serve(handler, "0.0.0.0", port, max_size=None):
+    async with websockets.serve(handler, ip, port, max_size=None):
         logger.info(f"WebSocket server running on ws://{ip}:{port}")
         await asyncio.Future()
 
