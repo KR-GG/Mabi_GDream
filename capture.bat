@@ -13,15 +13,12 @@ if %errorlevel% neq 0 (
 )
 
 :: 2. Check firewall rule for port 8000
-set RULE_NAME=Allow_TCP_8000
-netsh advfirewall firewall delete rule name="%RULE_NAME%"
+set RULE_NAME=Allow_TCP_8000_GDream
 netsh advfirewall firewall show rule name="%RULE_NAME%" | findstr "Enabled" >nul
 if %errorlevel% neq 0 (
     echo [INFO] No firewall rule found. Adding rule to allow TCP port 8000...
     netsh advfirewall firewall add rule name="%RULE_NAME%" ^
         dir=in action=allow protocol=TCP localport=8000 profile=any
-    netsh advfirewall firewall add rule name="Allow_ICMPv4" ^
-        protocol=icmpv4:8,any dir=in action=allow
 
 ) else (
     echo [INFO] Firewall rule for TCP port 8000 already exists.
