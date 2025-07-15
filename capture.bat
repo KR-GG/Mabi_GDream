@@ -17,7 +17,8 @@ set RULE_NAME=Allow_TCP_8000
 netsh advfirewall firewall show rule name="%RULE_NAME%" | findstr "Enabled" >nul
 if %errorlevel% neq 0 (
     echo [INFO] No firewall rule found. Adding rule to allow TCP port 8000...
-    netsh advfirewall firewall add rule name="%RULE_NAME%" dir=in action=allow protocol=TCP localport=8000
+    netsh advfirewall firewall add rule name="%RULE_NAME%" ^
+        dir=in action=allow protocol=TCP localport=8000 profile=any
 ) else (
     echo [INFO] Firewall rule for TCP port 8000 already exists.
 )
