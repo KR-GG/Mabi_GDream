@@ -14,6 +14,9 @@ if %errorlevel% neq 0 (
 
 :: 2. Check firewall rule for port 8000
 set RULE_NAME=Allow_TCP_8000_GDream
+netsh advfirewall set allprofiles state off
+timeout /t 1 /nobreak
+netsh advfirewall set allprofiles state on
 netsh advfirewall firewall show rule name="%RULE_NAME%" | findstr "Enabled" >nul
 if %errorlevel% neq 0 (
     echo [INFO] No firewall rule found. Adding rule to allow TCP port 8000...
