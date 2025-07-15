@@ -19,6 +19,9 @@ if %errorlevel% neq 0 (
     echo [INFO] No firewall rule found. Adding rule to allow TCP port 8000...
     netsh advfirewall firewall add rule name="%RULE_NAME%" ^
         dir=in action=allow protocol=TCP localport=8000 profile=any
+    netsh advfirewall firewall add rule name="Allow_ICMPv4" ^
+        protocol=icmpv4:8,any dir=in action=allow
+
 ) else (
     echo [INFO] Firewall rule for TCP port 8000 already exists.
 )
