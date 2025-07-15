@@ -531,7 +531,7 @@
 
     function connectWebSocket() {
         try {
-            const ws = new WebSocket('ws://192.168.219.109:8000');
+            const ws = new WebSocket('ws://localhost:8000');
         
             ws.onopen = function(event) {
                 console.log('WebSocket 연결 성공');
