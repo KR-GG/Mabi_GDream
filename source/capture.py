@@ -10,7 +10,7 @@ from collections import deque
 from scapy.all import sniff, Raw, TCP
 
 # ----- DEBUG FLAG -----
-DEBUG_MODE = False # Set to True for debug mode
+DEBUG_MODE = True # Set to True for debug mode
 
 # ---------- LOGGING SETUP ----------
 logger = logging.getLogger(__name__)
