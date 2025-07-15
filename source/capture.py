@@ -1,12 +1,16 @@
 import asyncio
 import brotli
 import struct
-import websockets
-import threading
-from scapy.all import sniff, Raw, TCP
-from collections import deque
 import time
+import threading
+import websockets
 import logging
+import socket
+from collections import deque
+from scapy.all import sniff, Raw, TCP
+
+# ----- DEBUG FLAG -----
+DEBUG_MODE = False # Set to True for debug mode
 
 # ---------- LOGGING SETUP ----------
 logger = logging.getLogger(__name__)
@@ -23,7 +27,7 @@ file_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(messa
 logger.addHandler(console_handler)
 logger.addHandler(file_handler)
 
-# ---------- CONFIGURATION ----------
+# ---------- CONFIG ----------
 TARGET_PORT = 16000
 PACKET_START = b'\x65\x27\x00\x00\x00\x00\x00\x00\x00'
 PACKET_END = b'\xe0\x27\x00\x00\x00\x00\x00\x00'
@@ -197,6 +201,18 @@ send_data_running = False
 batched_payloads = deque()
 batch_lock = asyncio.Lock()
 batch_sender_task = None
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(('8.8.8.8', 80))
+        local_ip = s.getsockname()[0]
+    except Exception as e:
+        logger.error(f"Failed to get local IP address: {e}")
+        local_ip = "127.0.0.1"
+    finally:
+        s.close()
+    return local_ip
 
 def extract_flags(flags: bytes) -> dict:
     result = {}
@@ -436,17 +452,60 @@ def handle_packet(pkt):
 async def start_websocket_server():
     global main_loop
     main_loop = asyncio.get_running_loop()
-    async with websockets.serve(handler, "127.0.0.1", 8000, max_size=None):
-        logger.info("WebSocket server running on ws://127.0.0.1:8000")
+
+    ip = get_local_ip()
+    port = 8000
+
+    async with websockets.serve(handler, "0.0.0.0", port, max_size=None):
+        logger.info(f"WebSocket server running on ws://{ip}:{port}")
         await asyncio.Future()
 
+# ----- DEBUG -----
+def make_debug_packet():
+    timestamp = int(time.time() * 1000)
+    used_by = b"abcd".hex()
+    target = b"dead".hex()
+    skill_name = "궁수_다발사격"
+    damage = 1234
+    flags = bytearray(6)
+    flags[0] |= 0x01  # crit_flag
+    flags[0] |= 0x08  # break_flag
+    flags[3] |= 0x40  # fire_flag
+    flags[4] |= 0x00
+
+    damage_data = {
+        'timestamp': timestamp,
+        'used_by': used_by,
+        'target': target,
+        'skill_name': skill_name,
+        'damage': damage,
+        'flags': extract_flags(bytes(flags))
+    }
+    return format_and_pack_log(damage_data)
+
+async def send_debug_loop():
+    while True:
+        await asyncio.sleep(1.0)
+        pkt = make_debug_packet()
+        await enqueue_payload(pkt)
+        print(f"Debug packet sent: {pkt.hex()}")
+
 def main():
-    thread = threading.Thread(
-        target=lambda: sniff(filter=f"tcp port {TARGET_PORT}", prn=handle_packet, store=0)
-    )
-    thread.daemon = True
-    thread.start()
-    asyncio.run(start_websocket_server())
+    if not DEBUG_MODE:
+        thread = threading.Thread(
+            target=lambda: sniff(filter=f"tcp port {TARGET_PORT}", prn=handle_packet, store=0)
+        )
+        thread.daemon = True
+        thread.start()
+
+    async def runner():
+        global main_loop
+        main_loop = asyncio.get_running_loop()
+        if DEBUG_MODE:
+            asyncio.create_task(send_debug_loop())
+        await start_websocket_server()
+
+    asyncio.run(runner())
 
 if __name__ == "__main__":
     main()
