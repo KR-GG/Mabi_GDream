@@ -25,8 +25,6 @@ if %errorlevel% neq 0 (
 :: 3. Set file paths
 set VENV_DIR=gdream
 set PYTHON_FILE=.\source\capture.py
-set HTML_FILE=stats.html
-set CHROME_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"
 
 :: 4. Create virtual environment if missing
 if not exist %VENV_DIR% (
@@ -40,10 +38,7 @@ call %VENV_DIR%\Scripts\activate.bat
 :: 6. Install dependencies
 pip install --disable-pip-version-check --quiet websockets scapy brotli
 
-:: 7. Launch HTML in Chrome
-start "" %CHROME_PATH% "%CD%\%HTML_FILE%"
-
-:: 8. Run Python WebSocket server
+:: 7. Run Python WebSocket server
 python %PYTHON_FILE%
 
 endlocal
