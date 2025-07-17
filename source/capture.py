@@ -29,8 +29,8 @@ logger.addHandler(file_handler)
 
 # ---------- CONFIG ----------
 TARGET_PORT = 16000
-PACKET_START = b'\x65\x27\x00\x00\x00\x00\x00\x00\x00'
-PACKET_END = b'\xe0\x27\x00\x00\x00\x00\x00\x00'
+PACKET_START = b'\x68\x27\x00\x00\x00\x00\x00\x00\x00'
+PACKET_END = b'\xe3\x27\x00\x00\x00\x00\x00\x00'
 
 # Flag bits definition
 FLAG_BITS = (
