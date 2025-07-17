@@ -270,9 +270,10 @@ def extract_packets(data: bytes):
                     except brotli.error as e:
                         logger.error(f"Brotli decompression error: {e}")
                         continue
+
+                logger.info(f"Extracted packet: type={data_type}, length={length}, content={content.hex()}")
                 
                 if data_type in (100318, 10308, 10719, 100170, 100177): #  100318: combo, 10308: skill_id, 10719: damage, 100170, 100177
-                    logger.info(f"Extracted packet: type={data_type}, length={length}, content={content.hex()}")
                     result.append({
                         "type": data_type,
                         "timestamp": round(time.time() * 1000),
@@ -397,7 +398,7 @@ async def send_data():
             t = packet['type']
             content = packet['content']
             
-            if t == 10701:
+            if t == 10719:
                 damage = int.from_bytes(content[16:20], 'little')
                 if 0 < damage < 1e8:
                     current_damage = {
@@ -413,11 +414,11 @@ async def send_data():
                         'damage': damage
                     }
                     logger.debug(f"Current damage set: {current_damage}")
-            elif t == 10299 and current_damage:
+            elif t == 10308 and current_damage:
                 used_by = content[0:4].hex()
                 target = content[8:12].hex()
                 action_id = content[16:20].hex()
-                flags = extract_flags(bytes(content[24:31]))
+                flags = extract_flags(bytes(content[24:35]))
                 if target == current_damage['target']:
                     damage_data = {
                         'timestamp': packet['timestamp'],
