@@ -270,7 +270,10 @@ def extract_packets(data: bytes):
                     except brotli.error as e:
                         logger.error(f"Brotli decompression error: {e}")
                         continue
-                logger.info(f"Extracted packet: type={data_type}, length={length}, content={content.hex()}")
+
+                if data_type not in (100253, 10327):
+                    logger.info(f"Extracted packet: type={data_type}, length={length}, content={content.hex()}")
+                
                 if data_type in (10701, 10299, 100178):
                     result.append({
                         "type": data_type,
