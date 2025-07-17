@@ -275,6 +275,7 @@ def extract_packets(data: bytes):
                 #     logger.info(f"Extracted packet: type={data_type}, length={length}, content={content.hex()}")
                 
                 if data_type in (100840, 100049, 100047, 100046, 100318): #  100840: damage, 100318: combo, 100049: hp_change
+                    logger.info(f"Extracted packet: type={data_type}, length={length}, content={content.hex()}")
                     result.append({
                         "type": data_type,
                         "timestamp": round(time.time() * 1000),
