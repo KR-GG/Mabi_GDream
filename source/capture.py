@@ -271,11 +271,11 @@ def extract_packets(data: bytes):
                         logger.error(f"Brotli decompression error: {e}")
                         continue
 
-                # if data_type not in (100172, 100253, 10327, 100493, 100649, 100646, 10512, 100743, 100860, 100609, 100493, 100448, 50007):
-                #     logger.info(f"Extracted packet: type={data_type}, length={length}, content={content.hex()}")
+                if data_type not in (100253, 10327, 100493, 100649, 100646, 10512, 100743):
+                    logger.info(f"Extracted packet: type={data_type}, length={length}, content={content.hex()}")
                 
                 if data_type in (100840, 100049, 100047, 100046, 100318): #  100840: damage, 100318: combo, 100049: hp_change
-                    logger.info(f"Extracted packet: type={data_type}, length={length}, content={content.hex()}")
+                    # logger.info(f"Extracted packet: type={data_type}, length={length}, content={content.hex()}")
                     result.append({
                         "type": data_type,
                         "timestamp": round(time.time() * 1000),
