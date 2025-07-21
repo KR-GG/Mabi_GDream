@@ -368,7 +368,7 @@ async def send_batch_periodically(websocket):
                     struct.pack('<H', len(pkt)) + pkt for pkt in batch
                 )
                 await websocket.send(packed)
-                logger.info(f"Sent batch of {len(batch)} packets")
+                logger.debug(f"Sent batch of {len(batch)} packets")
             except Exception as e:
                 logger.error(f"Failed to send batch: {e}")
                 break
