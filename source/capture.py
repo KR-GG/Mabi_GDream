@@ -270,7 +270,10 @@ def extract_packets(data: bytes):
                     except brotli.error as e:
                         logger.error(f"Brotli decompression error: {e}")
                         continue
-                    
+
+                if data_type not in ():
+                    logger.info(f"[INFO] Received packet: {data_type}, content: {content.hex()}")
+
                 if data_type in (100318, 10308, 10719, 100178): #  100318: combo, 10308: skill_id, 10719: damage, 100178: hp_change
                     result.append({
                         "type": data_type,
