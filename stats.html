@@ -960,6 +960,7 @@
             const avg = stat.total / stat.count;
             const pct = (stat.total / userData.total) * 100;
             const critRate = (stat.crits / stat.count * 100).toFixed(1);
+            const addHitRate = (stat.addHits / stat.count * 100).toFixed(1);
             return `
                 <tr>
                 <td>${idx + 1}</td>
@@ -970,7 +971,7 @@
                 <td>${stat.min}</td>
                 <td>${stat.max}</td>
                 <td>${critRate}%</td>
-                <td>${((stat.addHits / stat.count) * 100).toFixed(1)}%</td>
+                <td>${addHitRate}%</td>
                 <td>${pct.toFixed(1)}%</td>
                 </tr>`;
             }).join('');
@@ -1013,6 +1014,7 @@
         document.getElementById('avg-damage').textContent = userData.hits > 0 ? Math.round(userData.total / userData.hits).toLocaleString() : 0;
         document.getElementById('total-crits').textContent = userData.crits;
         document.getElementById('crit-rate').textContent = userData.hits > 0 ? ((userData.crits / userData.hits) * 100).toFixed(1) + '%' : '0%';
+        document.getElementById('add-hit-rate').textContent = userData.hits > 0 ? ((userData.addHits / userData.hits) * 100).toFixed(1) + '%' : '0%';
     }
 
     function updateDisplay() {
