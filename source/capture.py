@@ -72,6 +72,7 @@ SKILL_ID = {
     "45ed7f1e": "궁수_사이드스텝",
     "a8a27a27": "궁수_사이드스텝",
     "18aa950a": "궁수_호크샷",
+    "1e09c029": "궁수_호크샷",
     "9e5b953d": "궁수_호크샷_무방비",
     "fe6d8f7e": "궁수_이스케이프스텝",
     "e714dd6a": "궁수_죽음의궤적",
@@ -279,8 +280,8 @@ def extract_packets(data: bytes):
                         logger.error(f"Brotli decompression error: {e}")
                         continue
 
-                # if data_type not in (100253, 100609, 100610, 10327, 100493):
-                #     logger.info(f"[INFO] Received packet: {data_type}, content: {content.hex()}")
+                if data_type in (100096, 100157, 100113, 100133):
+                    logger.info(f"[INFO] Received packet: {data_type}, content: {content.hex()}")
 
                 # 100125: hp, 100150: speed, 100085: atk, 100111:def, 100156: strength, 100089: break, 100112: somssi, 100123: speed_atk, 100132: brain_power, 100153: skill_power, 100154: speed_skill, 100105: dmg_reduce,
                 if data_type in (100318, 10308, 10719, 100178, 100085, 100150): # 100318: combo, 10308: skill_id, 10719: damage, 100178: hp_change
