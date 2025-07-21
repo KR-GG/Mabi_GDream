@@ -283,7 +283,7 @@ def extract_packets(data: bytes):
                 if data_type in (100096, 100157, 100113, 100133):
                     logger.info(f"[INFO] Received packet: {data_type}, content: {content.hex()}")
 
-                # 100125: hp, 100150: speed, 100085: atk, 100111:def, 100156: strength, 100089: break, 100112: somssi, 100123: speed_atk, 100132: brain_power, 100153: skill_power, 100154: speed_skill, 100105: dmg_reduce,
+                # 100096: total_inven_power, 100125: hp, 100150: speed, 100085: atk, 100111:def, 100156: strength, 100089: break, 100112: somssi, 100123: speed_atk, 100132: brain_power, 100153: skill_power, 100154: speed_skill, 100105: dmg_reduce,
                 if data_type in (100318, 10308, 10719, 100178, 100085, 100150): # 100318: combo, 10308: skill_id, 10719: damage, 100178: hp_change
                     result.append({
                         "type": data_type,
@@ -420,14 +420,14 @@ async def send_data():
                 used_id = content[0:4].hex()
                 atk = int.from_bytes(content[8:12], 'little')
                 atk_map[used_id] = atk
-                logger.info(f"ATK updated: {used_id} -> {atk}")
+                logger.debug(f"ATK updated: {used_id} -> {atk}")
 
             elif t == 100150:
                 used_id = content[0:4].hex()
                 spd_hex = content[-4:].hex()
                 spd = struct.unpack('<f', bytes.fromhex(spd_hex))[0]
                 spd_map[used_id] = spd
-                logger.debug(f"SPD updated: {used_id} -> {spd}")
+                logger.info(f"SPD updated: {used_id} -> {spd}")
             
             if t == 10719:
                 damage = int.from_bytes(content[16:20], 'little')
