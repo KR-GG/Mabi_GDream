@@ -410,7 +410,7 @@ async def send_data():
                 used_id = content[0:4].hex()
                 atk = int.from_bytes(content[8:12], 'little')
                 atk_map[used_id] = atk
-                logger.debug(f"ATK updated: {used_id} -> {atk}")
+                logger.info(f"ATK updated: {used_id} -> {atk}")
 
             elif t == 100150:
                 used_id = content[0:4].hex()
