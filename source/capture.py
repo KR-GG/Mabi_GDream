@@ -228,6 +228,10 @@ def extract_flags(flags: bytes) -> dict:
 
     return result
 
+def extract_last_float_le(content_hex: str) -> float:
+    last_4_bytes = content_hex[-8:]
+    return struct.unpack('<f', bytes.fromhex(last_4_bytes))[0]
+
 def extract_packets(data: bytes):
     result = []
     pivot = 0
@@ -275,7 +279,7 @@ def extract_packets(data: bytes):
                 #     logger.info(f"[INFO] Received packet: {data_type}, content: {content.hex()}")
 
                 if data_type == 100150: # 100125: hp, 100150: speed, 100085: atk, 100111:def, 100156: strength, 100089: break, 100112: somssi, 100123: speed_atk, 100132: brain_power, 100153: skill_power, 100154: speed_skill, 100105: dmg_reduce,
-                    logger.info(f"[INFO] Received status packet: {data_type}, content: {int.from_bytes(content[-4:], 'little')}")
+                    logger.info(f"[INFO] Received status packet: {data_type}, content: {extract_last_float_le(content.hex())}")
 
                 if data_type in (100318, 10308, 10719, 100178): # 100318: combo, 10308: skill_id, 10719: damage, 100178: hp_change
                     result.append({
