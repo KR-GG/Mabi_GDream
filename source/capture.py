@@ -318,16 +318,23 @@ def format_and_pack_log(data):
     flags1 |= (flags.get('power_flag', 0) & 1) << 4
     flags1 |= (flags.get('fast_flag', 0) & 1) << 5
     flags1 |= (flags.get('dot_flag', 0) & 0b1111) << 6
+        
+    skill_bytes = data['skill_name'].encode('utf-8')[:255]
+    skill_len = len(skill_bytes)
+
     packed = struct.pack(
-        '<Q4s4sIH',
+        '<Q4s4sIHIfB',
         data['timestamp'],
         bytes.fromhex(data['used_by']),
         bytes.fromhex(data['target']),
         data['damage'],
-        flags1
+        flags1,
+        data['atk'],
+        data['spd'],
+        skill_len
     )
-    skill_bytes = data['skill_name'].encode('utf-8')[:255]
-    return packed + struct.pack('B', len(skill_bytes)) + skill_bytes
+
+    return packed + skill_bytes
 
 def parse_skill_name(skill_id, flags, e):
     skill = SKILL_ID.get(skill_id, f"Idle({skill_id})")
@@ -448,9 +455,10 @@ async def send_data():
                         'skill_name': parse_skill_name(action_id, flags, content[31:35].hex()),
                         'skill_id': action_id,
                         'damage': current_damage['damage'],
+                        'atk': atk_map.get(used_by, 0),
+                        'spd': spd_map.get(used_by, 0.0),
                         'flags': flags
                     }
-                    logger.info(f"used_by: {used_by}, damage: {damage_data['damage']}, atk: {atk_map.get(used_by, 'N/A')}, spd: {spd_map.get(used_by, 'N/A')}")
                     logger.debug(f"Damage data prepared: {damage_data}")
                     current_damage = None
                     payload = format_and_pack_log(damage_data)

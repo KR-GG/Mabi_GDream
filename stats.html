@@ -391,76 +391,81 @@
       <datalist id="user-suggestions"></datalist>
       <div class="status" id="ws-status">🔴 연결 안됨</div>
     </div>
-    <div class="main">
-      <div class="panel">
-        <div class="summary-section">
-          <h2>스킬 통계</h2>
-          <div class="scroll-container">
-            <table id="summary-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>스킬</th>
-                  <th>횟수</th>
-                  <th>총합</th>
-                  <th>평균</th>
-                  <th>최소</th>
-                  <th>최대</th>
-                  <th>치명타%</th>
-                  <th>점유율</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
+        <div class="main">
+            <div class="panel">
+                <div class="summary-section">
+                <h2>스킬 통계</h2>
+                <div class="scroll-container">
+                    <table id="summary-table">
+                    <thead>
+                        <tr>
+                        <th>#</th>
+                        <th>스킬</th>
+                        <th>횟수</th>
+                        <th>총합</th>
+                        <th>평균</th>
+                        <th>최소</th>
+                        <th>최대</th>
+                        <th>치명타%</th>
+                        <th>추가타%</th>
+                        <th>점유율</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                    </table>
+                </div>
+                </div>
+            <div class="totals-section">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>총 데미지</th>
+                        <th>총 히트 수</th>
+                        <th>평균 데미지</th>
+                        <th>치명타 수</th>
+                        <th>치명타 확률</th>
+                        <th>추가타 확률</th>
+                    </tr>
+                    </thead>
+                    <tbody id="totals-table">
+                    <tr>
+                        <td id="total-damage">0</td>
+                        <td id="total-hits">0</td>
+                        <td id="avg-damage">0</td>
+                        <td id="total-crits">0</td>
+                        <td id="crit-rate">0%</td>
+                        <td id="add-hit-rate">0%</td>
+                    </tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>      
+            <div class="log-section">
+                <h2>데미지 로그</h2>
+                <div class="scroll-container">
+                    <table id="log-table">
+                    <thead>
+                        <tr>
+                        <th>시간</th>
+                        <th>스킬</th>
+                        <th>대상</th>
+                        <th>데미지</th>
+                        <th>크리</th>
+                        <th>카운터</th>
+                        <th>무방비</th>
+                        <th>추가타</th>
+                        <th>연타</th>
+                        <th>강타</th>
+                        <th>상태이상</th>
+                        <th>ATK</th>
+                        <th>SPD</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-      <div class="totals-section">
-          <table>
-              <thead>
-              <tr>
-                  <th>총 데미지</th>
-                  <th>총 히트 수</th>
-                  <th>평균 데미지</th>
-                  <th>치명타 수</th>
-                  <th>치명타 확률</th>
-              </tr>
-              </thead>
-              <tbody id="totals-table">
-              <tr>
-                  <td id="total-damage">0</td>
-                  <td id="total-hits">0</td>
-                  <td id="avg-damage">0</td>
-                  <td id="total-crits">0</td>
-                  <td id="crit-rate">0%</td>
-              </tr>
-              </tbody>
-          </table>
-          </div>
-      </div>      
-      <div class="log-section">
-          <h2>데미지 로그</h2>
-          <div class="scroll-container">
-            <table id="log-table">
-              <thead>
-                <tr>
-                  <th>시간</th>
-                  <th>스킬</th>
-                  <th>대상</th>
-                  <th>데미지</th>
-                  <th>크리</th>
-                  <th>카운터</th>
-                  <th>무방비</th>
-                  <th>추가타</th>
-                  <th>연타</th>
-                  <th>강타</th>
-                  <th>상태이상</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-      </div>
-    </div>
     
   </div>
 
@@ -658,6 +663,7 @@
         document.getElementById('avg-damage').textContent = 0;
         document.getElementById('total-crits').textContent = 0;
         document.getElementById('crit-rate').textContent = '0%';
+        document.getElementById('add-hit-rate').textContent = '0%';
     }
     
     function exportCSV() {
@@ -688,10 +694,10 @@
         const view = new DataView(buffer);
         let offset = 0;
 
-        // 1. timestamp (4 bytes, little endian)
+        // 1. timestamp (uint64, little endian)
         const low = view.getUint32(offset, true);
         const high = view.getUint32(offset + 4, true);
-        const timestamp = BigInt(high) << 32n | BigInt(low);
+        const timestamp = (BigInt(high) << 32n) | BigInt(low);
         offset += 8;
 
         // 2. used_by (4 bytes)
@@ -704,38 +710,44 @@
             .map(b => b.toString(16).padStart(2, '0')).join('');
         offset += 4;
 
-        // 4. damage (4 bytes)
+        // 4. damage (uint32)
         const damage = view.getUint32(offset, true);
         offset += 4;
 
-        // 5. flags1 (2 bytes)
+        // 5. flags1 (uint16)
         const flags1 = view.getUint16(offset, true);
         offset += 2;
 
-        // 플래그 디코딩
+        // 🔍 flags 디코딩
         const critFlag      = (flags1 >> 0) & 1;
         const addHitFlag    = (flags1 >> 1) & 1;
         const unguardedFlag = (flags1 >> 2) & 1;
         const breakFlag     = (flags1 >> 3) & 1;
         const powerFlag     = (flags1 >> 4) & 1;
         const fastFlag      = (flags1 >> 5) & 1;
-        const dotFlag       = (flags1 >> 6) & 0b111;  // bits 6-8
+        const dotFlag       = (flags1 >> 6) & 0xF;  // 4비트 (6~9비트)
 
-        // 6. skill_name length (1 byte)
+        // 6. atk (uint32)
+        const atk = view.getUint32(offset, true);
+        offset += 4;
+
+        // 7. spd (float32)
+        const spd = view.getFloat32(offset, true);
+        offset += 4;
+
+        // 8. skill_name length (uint8)
         const nameLen = view.getUint8(offset);
         offset += 1;
 
-        // 7. skill_name (nameLen bytes, UTF-8)
+        // 9. skill_name (UTF-8)
         const skillBytes = new Uint8Array(buffer.slice(offset, offset + nameLen));
-        skillName_ = new TextDecoder('utf-8').decode(skillBytes);
-        const skillName = skillName_
-
+        const skillName = new TextDecoder('utf-8').decode(skillBytes);
         offset += nameLen;
 
         return {
             timestamp,
             used_by: usedBy,
-            target: target,
+            target,
             damage,
             crit_flag: critFlag,
             add_hit_flag: addHitFlag,
@@ -744,9 +756,12 @@
             power_flag: powerFlag,
             fast_flag: fastFlag,
             dot_flag: dotFlag,
+            atk,
+            spd,
             skill_name: skillName
         };
     }
+
 
     function processDamageData(log) {
         console.log("처리된 로그:", log);
@@ -770,10 +785,18 @@
                 totalDamage: 0,
                 totalHits: 0,
                 totalCrits: 0,
+                hitCount: 0,
+                critCount: 0,
+                addHitCount: 0,
                 damageLogs: [],
                 damageByTarget: {},
-                skills: {} 
+                skills: {},
+                atk: log.atk ?? 0,
+                spd: log.spd ?? 0.0
             };
+        } else {
+            battleData[usedBy].atk = log.atk ?? battleData[usedBy].atk;
+            battleData[usedBy].spd = log.spd ?? battleData[usedBy].spd;
         }
 
         updateTargetSuggestions(target);
@@ -947,6 +970,7 @@
                 <td>${stat.min}</td>
                 <td>${stat.max}</td>
                 <td>${critRate}%</td>
+                <td>${((stat.addHits / stat.count) * 100).toFixed(1)}%</td>
                 <td>${pct.toFixed(1)}%</td>
                 </tr>`;
             }).join('');
@@ -977,6 +1001,8 @@
                     8: '🧠'     // mind
                 }[log.dot_flag] ?? ''}
                 </td>
+                <td>${log.atk}</td>
+                <td>${log.spd.toFixed(2)}</td>
             </tr>`;
         }).join('');
     }
