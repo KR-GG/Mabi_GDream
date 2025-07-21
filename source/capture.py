@@ -201,6 +201,8 @@ send_data_running = False
 batched_payloads = deque()
 batch_lock = asyncio.Lock()
 batch_sender_task = None
+atk_map = {}
+spd_map = {}
 
 def get_local_ip():
     try:
@@ -278,10 +280,8 @@ def extract_packets(data: bytes):
                 # if data_type not in (100253, 100609, 100610, 10327, 100493):
                 #     logger.info(f"[INFO] Received packet: {data_type}, content: {content.hex()}")
 
-                if data_type == 100150: # 100125: hp, 100150: speed, 100085: atk, 100111:def, 100156: strength, 100089: break, 100112: somssi, 100123: speed_atk, 100132: brain_power, 100153: skill_power, 100154: speed_skill, 100105: dmg_reduce,
-                    logger.info(f"[INFO] Received status packet: {data_type}, content: {extract_last_float_le(content.hex())}")
-
-                if data_type in (100318, 10308, 10719, 100178): # 100318: combo, 10308: skill_id, 10719: damage, 100178: hp_change
+                # 100125: hp, 100150: speed, 100085: atk, 100111:def, 100156: strength, 100089: break, 100112: somssi, 100123: speed_atk, 100132: brain_power, 100153: skill_power, 100154: speed_skill, 100105: dmg_reduce,
+                if data_type in (100318, 10308, 10719, 100178, 100085, 100150): # 100318: combo, 10308: skill_id, 10719: damage, 100178: hp_change
                     result.append({
                         "type": data_type,
                         "timestamp": round(time.time() * 1000),
@@ -405,6 +405,19 @@ async def send_data():
             packet = sending_queue.popleft()
             t = packet['type']
             content = packet['content']
+
+            if t == 100085:
+                used_id = content[0:4].hex()
+                atk = int.from_bytes(content[8:12], 'little')
+                atk_map[used_id] = atk
+                logger.debug(f"ATK updated: {used_id} -> {atk}")
+
+            elif t == 100150:
+                used_id = content[0:4].hex()
+                spd_hex = content[-4:].hex()
+                spd = struct.unpack('<f', bytes.fromhex(spd_hex))[0]
+                spd_map[used_id] = spd
+                logger.debug(f"SPD updated: {used_id} -> {spd}")
             
             if t == 10719:
                 damage = int.from_bytes(content[16:20], 'little')
@@ -437,6 +450,7 @@ async def send_data():
                         'damage': current_damage['damage'],
                         'flags': flags
                     }
+                    logger.info(f"used_by: {used_by}, damage: {damage_data['damage']}, atk: {atk_map.get(used_by, 'N/A')}, spd: {spd_map.get(used_by, 'N/A')}")
                     logger.debug(f"Damage data prepared: {damage_data}")
                     current_damage = None
                     payload = format_and_pack_log(damage_data)
